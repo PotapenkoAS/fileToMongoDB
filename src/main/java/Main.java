@@ -21,7 +21,6 @@ public class Main {
             System.out.println("error catched");
             e.printStackTrace();
         }
-        System.out.println("ололо");
 
         MongoManager.createConnection();
         MongoManager.setDB();
