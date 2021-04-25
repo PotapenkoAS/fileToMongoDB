@@ -3,22 +3,22 @@ import model.LineModel;
 import mongoManager.MongoManager;
 import mysqlManager.MySQLManager;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Scanner;
 
 public class Main {
 
     public static void main(String[] args) {
         List<LineModel> lineModelsIo = Collections.emptyList();
         try {
-            File file = new File("src/main/resources/big_file.txt");
-            lineModelsIo = parseFile(file);
+            lineModelsIo = parseFile();
         } catch (Exception e) {
-            System.out.println("error catched");
             e.printStackTrace();
         }
 
@@ -29,24 +29,21 @@ public class Main {
         MongoManager.saveLines(lineModelsIo);
         long afterMongo = System.currentTimeMillis() / 1000L;
         long mongoDif = afterMongo - beforeMongo;
-        System.out.println("time of saving to mongo = " + (mongoDif) + "ms ... or   " + mongoDif / 1000L / 60L + "min");
-        //MongoManager.clearCollection();
+        System.out.println("time of saving to mongo = " + (mongoDif) + " s ... or   " + mongoDif / 60F + " min");
         MongoManager.closeConnection();
 
         long beforeMysql = System.currentTimeMillis() / 1000L;
         MySQLManager.doGood(lineModelsIo);
         long afterMysql = System.currentTimeMillis() / 1000L;
         long mysqlDif = afterMysql - beforeMysql;
-        System.out.println("time of saving to mySQL = " + (mysqlDif) + "ms ... or   " + mysqlDif / 1000 / 60 + "min");
-
+        System.out.println("time of saving to mySQL = " + (mysqlDif) + " s ... or   " + mysqlDif / 60F + " min");
 
     }
 
-    private static List<LineModel> parseFile(File file) throws FileNotFoundException {
-        Scanner scanner = new Scanner(file);
+    private static List<LineModel> parseFile() throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream("src/main/resources/test3.txt"), StandardCharsets.UTF_8));
         List<LineModel> result = new ArrayList<>();
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
+        for (String line; (line = reader.readLine()) != null; ) {
             result.add(ToModelMapper.toModel(line.split(";")));
         }
         return result;

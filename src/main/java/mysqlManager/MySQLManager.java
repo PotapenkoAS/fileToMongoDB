@@ -11,9 +11,11 @@ public class MySQLManager {
     private static Connection con;
     private static PreparedStatement lines_st;
     private static PreparedStatement counters_st;
+    private static PreparedStatement commit_st;
 
     private static String INSERT_LINES_SQL = "insert into `lines` (id, number, name, address, period, sum) values (?,?,?,?,?,?);";
     private static String INSERT_COUNTERS_SQL = "insert into counters (id, name, value, line_id) values (?,?,?,?);";
+    private static String COMMIT_SQL = "commit;";
 
     public static void doGood(List<LineModel> lines) {
 
@@ -21,6 +23,7 @@ public class MySQLManager {
             con = DriverManager.getConnection("jdbc:mysql://localhost:3306/formongo", "root", "1111");
             lines_st = con.prepareStatement(INSERT_LINES_SQL);
             counters_st = con.prepareStatement(INSERT_COUNTERS_SQL);
+            commit_st = con.prepareStatement(COMMIT_SQL);
             int i = 0;
             for (LineModel line : lines) {
                 lines_st.setString(1, line.getId());
@@ -42,10 +45,14 @@ public class MySQLManager {
                 if (i % 250 == 0) {
                     lines_st.executeBatch();
                     counters_st.executeBatch();
+                    commit_st.execute();
+                    lines_st.clearBatch();
+                    counters_st.clearBatch();
                 }
             }
             lines_st.executeBatch();
             counters_st.executeBatch();
+            commit_st.execute();
 
         } catch (Exception e) {
             e.printStackTrace();
